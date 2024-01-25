@@ -137,6 +137,21 @@ WSGI_APPLICATION = 'mohsearch.wsgi.application'
 
 DATABASES = {
     'default': {
+        'ENGINE': 'django.db.backends.postgressql',
+        'NAME': 'mohsearch',
+        'USER':'postgres',
+    
+        'PASSWORD':'Loveufather@123',
+
+        'HOST':'localhost',
+        'POST':'5432',
+    }
+}
+
+
+
+DATABASES = {
+    'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
