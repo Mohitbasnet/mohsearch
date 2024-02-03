@@ -5,11 +5,12 @@ from django.contrib import messages
 from .forms import ProjectForm, ReviewForm
 from django.contrib.auth.decorators import login_required
 from .utils import searchProjects,paginateProjects
+from django.views import View
 # Create your views here.
 
 def projects(request):
     projects, search_query = searchProjects(request)
-    custom_range, projects = paginateProjects(request, projects, 6	    )
+    custom_range, projects = paginateProjects(request, projects, 6)
 
     context = {'projects': projects,
                'search_query': search_query, 'custom_range': custom_range}
@@ -17,22 +18,49 @@ def projects(request):
 
 
 
-def project(request, pk):
-    projectObj = Project.objects.get(id = pk)
-    form = ReviewForm()
-    if request.method == "POST":
-        form = ReviewForm(request.POST)
-        review = form.save(commit = False)
-        review.project = projectObj
-        review.owner  = request.user.profile
-        review.save()
-        
-        projectObj.getVoteCount
-        
+# def project(request, pk):
+#     projectObj = Project.objects.get(id = pk)
+#     form = ReviewForm()
+#     if request.method == "POST":
+#         form = ReviewForm(request.POST)
+#         review = form.save(commit = False)
+#         review.project = projectObj
+#         review.owner  = request.user.profile
+#         review.save()
+#         projectObj.getVoteCount
+#         messages.success(request, 'your review is successfully submitted!')
+#         return redirect('project',pk = projectObj.id)
+#     return render(request, "projects/single-project.html", {'project': projectObj,'form':form})
 
-        messages.success(request, 'your review is successfully submitted!')
-        return redirect('project',pk = projectObj.id)
-    return render(request, "projects/single-project.html", {'project': projectObj,'form':form})
+# Class Based view for project
+
+class ProjectView(View):
+    template_name = "projects/single-project.html"
+    def get(self, request,pk):
+        projectObj = Project.objects.get(id = pk)
+        form = ReviewForm()
+        return render(request, self.template_name, {'project': projectObj, 'form': form})
+    def post(self, request, pk):
+         projectObj = Project.objects.get(id=pk)
+         form = ReviewForm(request.POST)
+         if form.is_valid():
+            review = form.save(commit = False)
+            review.project = projectObj
+            review.owner  = request.user.profile
+            review.save()
+            projectObj.getVoteCount()
+            messages.success(request, 'Your review is successfully submitted!')
+            return redirect('project', pk=projectObj.id)
+         return render(request, self.template_name,{'project':projectObj, 'form': form} )
+
+
+
+
+
+
+
+
+
  
 @login_required(login_url = "login")
 def createProject(request):
