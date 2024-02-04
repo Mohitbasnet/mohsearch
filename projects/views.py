@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from .utils import searchProjects,paginateProjects
 from django.views import View
 from django.utils.decorators import method_decorator
+from django.views.generic.edit import UpdateView
 # Create your views here.
 
 def projects(request):
@@ -114,25 +115,64 @@ class CreateProjectView(View):
 
             
 
-@login_required(login_url = "login")
-def updateProject(request,pk):
-    profile = request.user.profile
-    project = profile.project_set.get(id=pk)
-    form = ProjectForm(instance = project)
-    if request.method == 'POST':
-        newtags  = request.POST.get('newtags').replace(',', " ").split()
+
+# @login_required(login_url = "login")
+# def updateProject(request,pk):
+#     profile = request.user.profile
+#     project = profile.project_set.get(id=pk)
+#     form = ProjectForm(instance = project)
+#     if request.method == 'POST':
+#         newtags  = request.POST.get('newtags').replace(',', " ").split()
         
-        form = ProjectForm(request.POST, request.FILES, instance = project)
-        if form.is_valid():
+#         form = ProjectForm(request.POST, request.FILES, instance = project)
+#         if form.is_valid():
             
+#             project = form.save()
+#             for tag in newtags:
+#                 tag, created = Tag.objects.get_or_create(name = tag)
+#                 project.tags.add(tag)
+#             return redirect('account')
+#     context = {"form": form,
+#           'project':project}
+#     return render(request,"projects/project_form.html", context)
+
+
+
+#class based view
+@method_decorator(login_required, name='dispatch')
+class ProjectUpdateView(UpdateView):
+    model = Project
+    form_class = ProjectForm
+    template_name = "projects/project_form.html"
+    context_object_name = 'project'
+    success_url = 'account'  # Update this with the actual URL you want to redirect to
+
+    def get(self, request, *args, **kwargs):
+        profile = self.request.user.profile
+        project = profile.project_set.get(id=self.kwargs['pk'])
+        form = self.form_class(instance=project)
+        context = {"form": form, 'project': project}
+        return self.render_to_response(context)
+
+    def post(self, request, *args, **kwargs):
+        profile = self.request.user.profile
+        project = profile.project_set.get(id=self.kwargs['pk'])
+        form = self.form_class(request.POST, request.FILES, instance=project)
+        if form.is_valid():
             project = form.save()
+            newtags = request.POST.get('newtags').replace(',', " ").split()
             for tag in newtags:
-                tag, created = Tag.objects.get_or_create(name = tag)
+                tag, created = Tag.objects.get_or_create(name=tag)
                 project.tags.add(tag)
-            return redirect('account')
-    context = {"form": form,
-          'project':project}
-    return render(request,"projects/project_form.html", context)
+            return redirect(self.success_url)
+        context = {"form": form, 'project': project}
+        return self.render_to_response(context)
+
+
+
+
+
+
 
 @login_required(login_url = "login")
 def deleteProject(request,pk):
