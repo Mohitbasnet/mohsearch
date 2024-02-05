@@ -7,7 +7,8 @@ from django.contrib.auth.decorators import login_required
 from .utils import searchProjects,paginateProjects
 from django.views import View
 from django.utils.decorators import method_decorator
-from django.views.generic.edit import UpdateView
+from django.views.generic.edit import UpdateView,DeleteView
+from django.urls import reverse_lazy
 # Create your views here.
 
 def projects(request):
@@ -174,13 +175,25 @@ class ProjectUpdateView(UpdateView):
 
 
 
-@login_required(login_url = "login")
-def deleteProject(request,pk):
-    profile = request.user.profile
-    project = profile.project_set.get(id = pk)
+# @login_required(login_url = "login")
+# def deleteProject(request,pk):
+#     profile = request.user.profile
+#     project = profile.project_set.get(id = pk)
 
-    if request.method =='POST':
-        project.delete()
-        return redirect("account")
-    context = {'object':project}
-    return render(request,"delete_template.html", context)
+#     if request.method =='POST':
+#         project.delete()
+#         return redirect("account")
+#     context = {'object':project}
+#     return render(request,"delete_template.html", context)
+
+
+# Class based view
+method_decorator(login_required, name='dispatch')
+class DeleteProjectView(DeleteView):
+    model = Project
+    template_name = "delete_template.html"
+    context_object_name = 'project'
+    success_url = reverse_lazy('account')
+
+    def get_object(self, queryset=None):
+        return self.request.user.profile.project_set.get(id=self.kwargs['pk'])
