@@ -6,6 +6,8 @@ from .models import Profile, Skill ,Message
 from django.contrib import messages
 from .forms import CostomUserCreationForm,ProfileForm, SkillForm, MessageForm
 from .utils import searchProfiles,paginateProfiles
+from django.views import View
+from django.utils.decorators import method_decorator
 
 # Create your views here.
 
@@ -111,25 +113,55 @@ def editAccount(request):
 
     return render(request, "users/profile_form.html", context)
 
-@login_required(login_url = 'login')
-def createSkill(request):
-    profile = request.user.profile
-    form = SkillForm()
-    if request.method =="POST":
-        form = SkillForm(request.POST)
-        if form.is_valid():
-            skill = form.save(commit = False)
-            skill.owner = profile
-            skill.save()
-            messages.success(request,"Skill was added successfully")
-            return redirect('account')
+# @login_required(login_url = 'login')
+# def createSkill(request):
+#     profile = request.user.profile
+#     form = SkillForm()
+#     if request.method =="POST":
+#         form = SkillForm(request.POST)
+#         if form.is_valid():
+#             skill = form.save(commit = False)
+#             skill.owner = profile
+#             skill.save()
+#             messages.success(request,"Skill was added successfully")
+#             return redirect('account')
 
 
 
-    context = {
-             'form': form
-        }
-    return render(request, "users/skill_form.html",context)
+#     context = {
+#              'form': form
+#         }
+#     return render(request, "users/skill_form.html",context)
+
+
+#class based view for creating skill
+@method_decorator(login_required, name='dispatch')
+class CreateSkillView(View):
+    def get(self, request):
+        if request.user.is_authenticated:
+            profile = request.user.profile
+            form = SkillForm()
+            context = {'form': form}
+            return render(request, "users/skill_form.html", context)
+        else:
+            return redirect('login')
+
+    def post(self, request):
+        if request.user.is_authenticated:
+            profile = request.user.profile
+            form = SkillForm(request.POST)
+            if form.is_valid():
+                skill = form.save(commit=False)
+                skill.owner = profile
+                skill.save()
+                messages.success(request, "Skill was added successfully")
+                return redirect('account')
+            else:
+                context = {'form': form}
+                return render(request, "users/skill_form.html", context)
+        else:
+            return redirect('login')
+
 
 
 @login_required(login_url = 'login')
@@ -221,3 +253,4 @@ def createMessage(request,pk):
 
     }
     return render(request,"users/message_form.html",context)
+
