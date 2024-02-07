@@ -8,7 +8,7 @@ from .forms import CostomUserCreationForm,ProfileForm, SkillForm, MessageForm
 from .utils import searchProfiles,paginateProfiles
 from django.views import View
 from django.utils.decorators import method_decorator
-
+from django.views.generic.edit import UpdateView,DeleteView
 # Create your views here.
 
 def loginUser(request):
@@ -164,23 +164,52 @@ class CreateSkillView(View):
 
 
 
-@login_required(login_url = 'login')
-def updateSkill(request,pk):
-    profile = request.user.profile
-    skill = profile.skill_set.get(id=pk)
-    form = SkillForm(instance = skill)
-    if request.method =="POST":
-        form = SkillForm(request.POST,instance=skill)
-        if form.is_valid():
+# @login_required(login_url = 'login')
+# def updateSkill(request,pk):
+#     profile = request.user.profile
+#     skill = profile.skill_set.get(id=pk)
+#     form = SkillForm(instance = skill)
+#     if request.method =="POST":
+#         form = SkillForm(request.POST,instance=skill)
+#         if form.is_valid():
             
-            form.save()
-            messages.success(request,"Skill was Updated Succcessfully!")
-            return redirect('account')
+#             form.save()
+#             messages.success(request,"Skill was Updated Succcessfully!")
+#             return redirect('account')
 
-    context = {
-             'form': form
-        }
-    return render(request, "users/skill_form.html",context)
+#     context = {
+#              'form': form
+#         }
+#     return render(request, "users/skill_form.html",context)
+
+# class Based view
+@method_decorator(login_required(login_url='login'), name='dispatch')
+class UpdateSkillView(View):
+    template_name = 'users/skill_form.html'
+    success_url = 'account'
+
+    def get(self, request, pk):
+        profile = request.user.profile
+        skill = profile.skill_set.get(id=pk)
+        form = SkillForm(instance=skill)
+        context = {'form': form}
+        return render(request, self.template_name, context)
+
+    def post(self, request, pk):
+        profile = request.user.profile
+        skill = profile.skill_set.get(id=pk)
+        form = SkillForm(request.POST, instance=skill)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Skill was updated successfully!')
+            return redirect(self.success_url)
+        context = {'form': form}
+        return render(request, self.template_name, context)
+
+
+
+
+
 
 @login_required(login_url = 'login')
 def deleteSkill(request, pk):

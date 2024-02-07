@@ -148,7 +148,17 @@ WSGI_APPLICATION = 'mohsearch.wsgi.application'
 #     }
 # }
 
-
+# MySQL database
+# DATABASES = {
+# 	'default': {
+# 		'ENGINE': 'django.db.backends.mysql',
+# 		'NAME': 'mohsearch',
+# 		'USER': 'root',
+# 		'PASSWORD': 'Loveufather@123',
+# 		'HOST':'localhost',
+# 		'PORT':'3306',
+# 	}
+# }
 
 DATABASES = {
     'default': {
