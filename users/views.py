@@ -211,19 +211,36 @@ class UpdateSkillView(View):
 
 
 
-@login_required(login_url = 'login')
-def deleteSkill(request, pk):
-    profile = request.user.profile
-    skill = profile.skill_set.get(id=pk)
-    if request.method == "POST":
+# @login_required(login_url = 'login')
+# def deleteSkill(request, pk):
+#     profile = request.user.profile
+#     skill = profile.skill_set.get(id=pk)
+#     if request.method == "POST":
+#         skill.delete()
+#         messages.success(request,"Skill was deleted Succcessfully!")
+#         return redirect('account')
+
+#     context = {
+#               'object': skill
+#     }
+#     return render(request,'delete_template.html', context)
+
+
+#class based view
+@method_decorator(login_required(login_url='login'), name='dispatch')
+class SkillDeleteView(View):
+    def post(self, request, pk):
+        profile = request.user.profile
+        skill = profile.skill_set.get(id=pk)
         skill.delete()
-        messages.success(request,"Skill was deleted Succcessfully!")
+        messages.success(request, "Skill was deleted successfully!")
         return redirect('account')
 
-    context = {
-              'object': skill
-    }
-    return render(request,'delete_template.html', context)
+    def get(self, request, pk):
+        profile = request.user.profile
+        skill = profile.skill_set.get(id=pk)
+        context = {'object': skill}
+        return render(request, 'delete_template.html', context)
 
 
 @login_required(login_url = 'login')
