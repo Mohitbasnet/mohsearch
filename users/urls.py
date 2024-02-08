@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-from .views import CreateSkillView,UpdateSkillView
+from .views import CreateSkillView,UpdateSkillView,SkillDeleteView
 
 urlpatterns = [
 
@@ -11,7 +11,7 @@ urlpatterns = [
     path('edit-account/', views.editAccount, name = "edit-account"),
     path('create-skill/',CreateSkillView.as_view(), name = "create-skill"),
     path('update-skill/<str:pk>/' ,UpdateSkillView.as_view(), name = "update-skill"),
-    path('delete-skill/<str:pk>/',views.deleteSkill, name = "delete-skill"),
+    path('delete-skill/<str:pk>/',SkillDeleteView.as_view(), name = "delete-skill"),
 
     path('',views.profiles , name = "profiles"),
     path('profile/<str:pk>/', views.userProfile, name="user-profile"),
