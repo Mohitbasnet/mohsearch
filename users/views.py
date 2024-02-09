@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
@@ -9,6 +9,7 @@ from .utils import searchProfiles,paginateProfiles
 from django.views import View
 from django.utils.decorators import method_decorator
 from django.views.generic.edit import UpdateView,DeleteView
+from django.views.generic import DetailView
 # Create your views here.
 
 def loginUser(request):
@@ -271,6 +272,27 @@ def viewMessage(request,pk):
        'message': message
     }
     return render(request, 'users/message.html',context)
+
+@method_decorator(login_required(login_url='login'), name='dispatch')
+class MessageDetailView(DetailView):
+    template_name = "users/message.html"
+    model = Message  # Assuming you have a 'Message' model
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        message = self.object  # Access the retrieved message object
+        message.is_read = True  # Mark as read
+        message.save()
+
+        context.update({
+            'message': message,
+        })
+        return context
+
+    def get_object(self, queryset=None):
+        pk = self.kwargs.get('pk')
+        profile = self.request.user.profile
+        return get_object_or_404(profile.messages.filter(id=pk))  # Filter by profile and ID
 
 
 def createMessage(request,pk):
