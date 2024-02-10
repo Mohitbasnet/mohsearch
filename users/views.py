@@ -9,7 +9,7 @@ from .utils import searchProfiles,paginateProfiles
 from django.views import View
 from django.utils.decorators import method_decorator
 from django.views.generic.edit import UpdateView,DeleteView
-from django.views.generic import DetailView
+from django.views.generic import DetailView,CreateView
 # Create your views here.
 
 def loginUser(request):
@@ -258,20 +258,20 @@ def inbox(request):
     return render(request, "users/inbox.html",context)
 
 
-@login_required(login_url = 'login')
-def viewMessage(request,pk):
-    profile = request.user.profile
-    message = profile.messages.get(id=pk)
-    if message.is_read == False:
-        message.is_read = True
-        message.save()
+# @login_required(login_url = 'login')
+# def viewMessage(request,pk):
+#     profile = request.user.profile
+#     message = profile.messages.get(id=pk)
+#     if message.is_read == False:
+#         message.is_read = True
+#         message.save()
 
     
     
-    context = {
-       'message': message
-    }
-    return render(request, 'users/message.html',context)
+#     context = {
+#        'message': message
+#     }
+#     return render(request, 'users/message.html',context)
 
 @method_decorator(login_required(login_url='login'), name='dispatch')
 class MessageDetailView(DetailView):
@@ -322,3 +322,36 @@ def createMessage(request,pk):
     }
     return render(request,"users/message_form.html",context)
 
+
+# class based view for creating message
+
+class CreateMessageView(CreateView):
+    model = Message
+    form_class = MessageForm
+    template_name = 'users/message_form.html'
+    success_url = 'user-profile'
+
+    def form_valid(self, form):
+        recipient = Profile.objects.get(id=self.kwargs['pk'])
+        message = form.save(commit=False)
+        message.recipient = recipient
+
+        try:
+            sender = self.request.user.profile
+        except:
+            sender = None
+
+        if sender:
+            message.sender = sender
+            message.name = sender.name
+            message.email = sender.email
+
+        message.save()
+        messages.success(self.request, "Your message has been successfully sent!")
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        recipient = Profile.objects.get(id=self.kwargs['pk'])
+        context['recipient'] = recipient
+        return context
