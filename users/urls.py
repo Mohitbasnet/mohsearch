@@ -1,7 +1,6 @@
 from django.urls import path
 from . import views
-from .views import CreateSkillView,UpdateSkillView,SkillDeleteView,MessageDetailView
-
+from .views import CreateSkillView,UpdateSkillView,SkillDeleteView,MessageDetailView,CreateMessageView
 urlpatterns = [
 
     path('login/', views.loginUser, name = "login"),
@@ -17,7 +16,7 @@ urlpatterns = [
     path('profile/<str:pk>/', views.userProfile, name="user-profile"),
     path('inbox/', views.inbox, name = "inbox"),
     path('message/<str:pk>/', MessageDetailView.as_view(), name = "message"),
-    path('send-message/<str:pk>/',views.createMessage,name="create-message"),
+    path('send-message/<str:pk>/',CreateMessageView.as_view(),name="create-message"),
 
    
 ] 
