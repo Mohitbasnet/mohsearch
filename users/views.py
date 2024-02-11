@@ -9,7 +9,7 @@ from .utils import searchProfiles,paginateProfiles
 from django.views import View
 from django.utils.decorators import method_decorator
 from django.views.generic.edit import UpdateView,DeleteView
-from django.views.generic import DetailView
+from django.views.generic import DetailView,CreateView
 # Create your views here.
 
 def loginUser(request):
@@ -257,21 +257,34 @@ def inbox(request):
     }
     return render(request, "users/inbox.html",context)
 
+# Class based view for infox
+# @method_decorator(login_required(login_url='login'), name='dispatch')
+# class InboxView(View):
+#     def get(self, request, *args, **kwargs):
+#         profile = request.user.profile
+#         message_requests = profile.messages.all()
+#         unread_count = message_requests.filter(is_read=False).count()
 
-@login_required(login_url = 'login')
-def viewMessage(request,pk):
-    profile = request.user.profile
-    message = profile.messages.get(id=pk)
-    if message.is_read == False:
-        message.is_read = True
-        message.save()
+#         context = {
+#             'message_requests': message_requests,
+#             'unread_count': unread_count
+#         }
+#         return render(request, "users/inbox.html", context)
+
+# @login_required(login_url = 'login')
+# def viewMessage(request,pk):
+#     profile = request.user.profile
+#     message = profile.messages.get(id=pk)
+#     if message.is_read == False:
+#         message.is_read = True
+#         message.save()
 
     
     
-    context = {
-       'message': message
-    }
-    return render(request, 'users/message.html',context)
+#     context = {
+#        'message': message
+#     }
+#     return render(request, 'users/message.html',context)
 
 @method_decorator(login_required(login_url='login'), name='dispatch')
 class MessageDetailView(DetailView):
@@ -295,30 +308,63 @@ class MessageDetailView(DetailView):
         return get_object_or_404(profile.messages.filter(id=pk))  # Filter by profile and ID
 
 
-def createMessage(request,pk):
-    recipient = Profile.objects.get(id = pk)
-    form = MessageForm()
-    try:
-        sender = request.user.profile
-    except:
-        sender = None
-    if request.method == 'POST':
-        form = MessageForm(request.POST)
-        if form.is_valid():
-            message = form.save(commit = False)
+# def createMessage(request,pk):
+#     recipient = Profile.objects.get(id = pk)
+#     form = MessageForm()
+#     try:
+#         sender = request.user.profile
+#     except:
+#         sender = None
+#     if request.method == 'POST':
+#         form = MessageForm(request.POST)
+#         if form.is_valid():
+#             message = form.save(commit = False)
+#             message.sender = sender
+#             message.recipient = recipient
+#             if sender:
+#                 message.name = sender.name
+#                 message.email = sender.email
+#             message.save()
+#             messages.success(request,"Your message has successfully sent!")
+#             return redirect('user-profile',pk=recipient.id)
+
+#     context = {
+#         "recipient":recipient ,
+#         'form': form
+
+#     }
+#     return render(request,"users/message_form.html",context)
+
+
+# class based view for creating message
+
+class CreateMessageView(CreateView):
+    model = Message
+    form_class = MessageForm
+    template_name = 'users/message_form.html'
+    success_url = '/user-profile/'  # Ensure that this URL is correct
+    
+    def form_valid(self, form):
+        recipient = Profile.objects.get(id=self.kwargs['pk'])
+        message = form.save(commit=False)
+        message.recipient = recipient
+
+        try:
+            sender = self.request.user.profile
+        except:
+            sender = None
+
+        if sender:
             message.sender = sender
-            message.recipient = recipient
-            if sender:
-                message.name = sender.name
-                message.email = sender.email
-            message.save()
-            messages.success(request,"Your message has successfully sent!")
-            return redirect('user-profile',pk=recipient.id)
+            message.name = sender.name
+            message.email = sender.email
 
-    context = {
-        "recipient":recipient ,
-        'form': form
+        message.save()
+        messages.success(self.request, "Your message has been successfully sent!")
+        return super().form_valid(form)
 
-    }
-    return render(request,"users/message_form.html",context)
-
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        recipient = Profile.objects.get(id=self.kwargs['pk'])
+        context['recipient'] = recipient
+        return context
