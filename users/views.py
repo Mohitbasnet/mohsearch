@@ -95,24 +95,40 @@ def userAccount(request):
     return render(request,"users/account.html",context)
 
     
-@login_required(login_url = 'login')
-def editAccount(request):
-    profile = request.user.profile
-    form = ProfileForm( instance = profile)
-    if request.method == "POST":
-        form = ProfileForm(request.POST, request.FILES, instance = profile )
-        if form.is_valid():
-            form.save()
-            return redirect('account')
+# @login_required(login_url = 'login')
+# def editAccount(request):
+#     profile = request.user.profile
+#     form = ProfileForm( instance = profile)
+#     if request.method == "POST":
+#         form = ProfileForm(request.POST, request.FILES, instance = profile )
+#         if form.is_valid():
+#             form.save()
+#             return redirect('account')
 
 
 
 
-    context = {
-        'form': form
-    }
+#     context = {
+#         'form': form
+#     }
 
-    return render(request, "users/profile_form.html", context)
+#     return render(request, "users/profile_form.html", context)
+
+# class Based view for editing account
+@method_decorator(login_required, name='dispatch')
+class EditAccountView(UpdateView):
+    model = Profile
+    fields = '__all__'  # Update all profile fields (or specify specific fields)
+    template_name = "users/profile_form.html"
+
+    def get_object(self):
+        return self.request.user.profile  # Access the current user's profile
+
+    def form_valid(self, form):
+        # Form is valid, save and redirect correctly
+        self.object = form.save()  # Update the object from the form data
+        return redirect('account')  # Redirect to account page after successful update
+
 
 # @login_required(login_url = 'login')
 # def createSkill(request):

@@ -1,13 +1,13 @@
 from django.urls import path
 from . import views
-from .views import CreateSkillView,UpdateSkillView,SkillDeleteView,MessageDetailView,CreateMessageView
+from .views import CreateSkillView,UpdateSkillView,SkillDeleteView,MessageDetailView,CreateMessageView,EditAccountView
 urlpatterns = [
 
     path('login/', views.loginUser, name = "login"),
     path('logout/', views.logoutUser , name = "logout"),
     path('register/',views.registerUser, name = "register"),
     path('account/', views.userAccount, name = 'account'),
-    path('edit-account/', views.editAccount, name = "edit-account"),
+    path('edit-account/', EditAccountView.as_view(), name = "edit-account"),
     path('create-skill/',CreateSkillView.as_view(), name = "create-skill"),
     path('update-skill/<str:pk>/' ,UpdateSkillView.as_view(), name = "update-skill"),
     path('delete-skill/<str:pk>/',SkillDeleteView.as_view(), name = "delete-skill"),
